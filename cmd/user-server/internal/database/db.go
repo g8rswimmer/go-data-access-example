@@ -9,7 +9,7 @@ import (
 )
 
 func Open(ctx context.Context) (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", "/dal.db")
+	db, err := sql.Open("sqlite3", "file::memory:?mode=memory")
 	if err != nil {
 		return nil, fmt.Errorf("sqlite database open error %w", err)
 	}

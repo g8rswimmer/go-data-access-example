@@ -6,7 +6,9 @@ import (
 )
 
 func JSON(w http.ResponseWriter, status int, body interface{}) {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
+
 	if body == nil {
 		return
 	}
@@ -15,6 +17,5 @@ func JSON(w http.ResponseWriter, status int, body interface{}) {
 	if err != nil {
 		return
 	}
-	w.Header().Add("content-type", "application/json")
 	_, _ = w.Write(enc)
 }

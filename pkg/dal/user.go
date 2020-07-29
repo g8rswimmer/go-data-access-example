@@ -49,20 +49,50 @@ func (u *User) FetchByID(ctx context.Context, id string) (*model.UserEntity, err
 		return nil, fmt.Errorf("user fetch by id length %d", len(id))
 	}
 
-	const stmt = `SELECT id, first_name, last_name, created_at, updated_at FROM user WHERE id = ? AND updated_at = NULL`
+	const stmt = `SELECT id, first_name, last_name, created_at, updated_at, deleted_at FROM user WHERE id = ?`
 	row := u.DB.QueryRowContext(ctx, stmt, id)
 
 	e := &model.UserEntity{}
-	err := row.Scan(&e.ID, &e.FirstName, &e.LastName, &e.CreatedAt, &e.UpdatedAt)
+	err := row.Scan(&e.ID, &e.FirstName, &e.LastName, &e.CreatedAt, &e.UpdatedAt, &e.DeletedAt)
+	switch {
+	case errors.Is(err, sql.ErrNoRows):
+		return nil, errorx.ErrNoUser
+	case err != nil:
+		return nil, fmt.Errorf("user fetch query %w", err)
+	case e.DeletedAt.Valid:
+		return nil, errorx.ErrDeleteUser
+	default:
+		return e, nil
+	}
+
+}
+
+func (u *User) FetchAll(ctx context.Context) ([]*model.UserEntity, error) {
+
+	const stmt = `SELECT id, first_name, last_name, created_at, updated_at, deleted_at FROM user`
+	rows, err := u.DB.QueryContext(ctx, stmt)
 	switch {
 	case errors.Is(err, sql.ErrNoRows):
 		return nil, errorx.ErrNoUser
 	case err != nil:
 		return nil, fmt.Errorf("user fetch query %w", err)
 	default:
-		return e, nil
+	}
+	defer rows.Close()
+
+	entities := []*model.UserEntity{}
+	for rows.Next() {
+		e := &model.UserEntity{}
+		deletedAt := sql.NullTime{}
+		if err := rows.Scan(&e.ID, &e.FirstName, &e.LastName, &e.CreatedAt, &e.UpdatedAt, &deletedAt); err != nil {
+			return nil, fmt.Errorf("user row scan error %w", err)
+		}
+		if deletedAt.Valid == false {
+			entities = append(entities, e)
+		}
 	}
 
+	return entities, nil
 }
 
 func (u *User) Update(ctx context.Context, id string, user *model.User) (*model.UserEntity, error) {
@@ -79,10 +109,10 @@ func (u *User) Update(ctx context.Context, id string, user *model.User) (*model.
 		return nil, err
 	}
 
-	if len(user.FirstName) == 0 {
+	if len(user.FirstName) > 0 {
 		e.FirstName = user.FirstName
 	}
-	if len(user.LastName) == 0 {
+	if len(user.LastName) > 0 {
 		e.LastName = user.LastName
 	}
 	e.UpdatedAt = time.Now()
