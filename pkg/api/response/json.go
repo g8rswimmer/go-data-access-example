@@ -5,6 +5,7 @@ import (
 	"net/http"
 )
 
+// JSON will send a response with a json body
 func JSON(w http.ResponseWriter, status int, body interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
