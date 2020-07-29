@@ -13,7 +13,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type UserDAO interface {
+// DAO is the user data access object
+type DAO interface {
 	Create(ctx context.Context, user *model.User) (*model.UserEntity, error)
 	FetchByID(ctx context.Context, id string) (*model.UserEntity, error)
 	FetchAll(ctx context.Context) ([]*model.UserEntity, error)
@@ -29,11 +30,13 @@ type errorMessage struct {
 	Message string `json:"message,omitempty"`
 }
 
+// Handler provides all of the user handlers
 type Handler struct {
-	UserDAO UserDAO
+	UserDAO DAO
 }
 
-func (h *Handler) Create() http.HandlerFunc {
+// create handles the user create request
+func (h *Handler) create() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := &model.User{}
 		if err := json.NewDecoder(r.Body).Decode(user); err != nil {
@@ -58,7 +61,8 @@ func (h *Handler) Create() http.HandlerFunc {
 	}
 }
 
-func (h *Handler) FetchByID() http.HandlerFunc {
+// fetchByID will return an user by its id
+func (h *Handler) fetchByID() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars[userID]
@@ -90,7 +94,8 @@ func (h *Handler) FetchByID() http.HandlerFunc {
 	}
 }
 
-func (h *Handler) List() http.HandlerFunc {
+// list will return all of the users
+func (h *Handler) list() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		entities, err := h.UserDAO.FetchAll(r.Context())
 		switch {
@@ -113,7 +118,8 @@ func (h *Handler) List() http.HandlerFunc {
 	}
 }
 
-func (h *Handler) Update() http.HandlerFunc {
+// update will return the updated user
+func (h *Handler) update() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := &model.User{}
 		if err := json.NewDecoder(r.Body).Decode(user); err != nil {
@@ -162,7 +168,8 @@ func (h *Handler) Update() http.HandlerFunc {
 	}
 }
 
-func (h *Handler) Delete() http.HandlerFunc {
+// delete will remove the user
+func (h *Handler) delete() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars[userID]
@@ -194,10 +201,11 @@ func (h *Handler) Delete() http.HandlerFunc {
 
 }
 
+// Add will configure the routes for user operations
 func (h *Handler) Add(router *mux.Router) {
-	router.Methods(http.MethodPost).Path("/user").Handler(h.Create()).Name("user-create")
-	router.Methods(http.MethodGet).Path(fmt.Sprintf("/users/{%s}", userID)).Handler(h.FetchByID()).Name("user-fetch")
-	router.Methods(http.MethodGet).Path("/users").Handler(h.List()).Name("user-fetch-all")
-	router.Methods(http.MethodPatch).Path(fmt.Sprintf("/users/{%s}", userID)).Handler(h.Update()).Name("user-update")
-	router.Methods(http.MethodDelete).Path(fmt.Sprintf("/users/{%s}", userID)).Handler(h.Delete()).Name("user-delete")
+	router.Methods(http.MethodPost).Path("/user").Handler(h.create()).Name("user-create")
+	router.Methods(http.MethodGet).Path(fmt.Sprintf("/users/{%s}", userID)).Handler(h.fetchByID()).Name("user-fetch")
+	router.Methods(http.MethodGet).Path("/users").Handler(h.list()).Name("user-fetch-all")
+	router.Methods(http.MethodPatch).Path(fmt.Sprintf("/users/{%s}", userID)).Handler(h.update()).Name("user-update")
+	router.Methods(http.MethodDelete).Path(fmt.Sprintf("/users/{%s}", userID)).Handler(h.delete()).Name("user-delete")
 }
