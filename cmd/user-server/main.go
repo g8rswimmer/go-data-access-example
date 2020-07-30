@@ -25,7 +25,7 @@ func main() {
 
 	config := env.Load()
 
-	db, err := database.Open(ctx)
+	db, err := database.Open(ctx, []string{dal.UserTable})
 	if err != nil {
 		log.Panic(err)
 	}

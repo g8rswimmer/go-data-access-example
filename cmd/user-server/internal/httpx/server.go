@@ -11,15 +11,18 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Router will add the routes to the mux
 type Router interface {
 	Add(*mux.Router)
 }
 
+// Info contains the information on the service
 type Info struct {
 	Name    string `json:"name"`
 	Version string `json:"version"`
 }
 
+// Server handles the http server for the service
 type Server struct {
 	svr  *http.Server
 	info Info
@@ -27,6 +30,7 @@ type Server struct {
 
 const shutdownTO = time.Second * 10
 
+// NewServer creates a new server
 func NewServer(info Info, port string, rto, wto time.Duration) *Server {
 	return &Server{
 		svr: &http.Server{
@@ -38,6 +42,7 @@ func NewServer(info Info, port string, rto, wto time.Duration) *Server {
 	}
 }
 
+// Start the server with the routes
 func (s *Server) Start(routers []Router) {
 
 	s.svr.Handler = s.handler(routers)
@@ -60,6 +65,7 @@ func (s Server) handler(routers []Router) http.Handler {
 	return r
 }
 
+// Shutdown will gracefuly shutdown the server
 func (s *Server) Shutdown(ctx context.Context) error {
 	ctxTO, cancel := context.WithTimeout(ctx, shutdownTO)
 	defer cancel()

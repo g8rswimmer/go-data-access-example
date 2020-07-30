@@ -6,12 +6,14 @@ import (
 	"time"
 )
 
+// HTTP contains all of the http configuration
 type HTTP struct {
 	Port         string
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
 }
 
+// Config contains all of the configuration
 type Config struct {
 	HTTP *HTTP
 }
@@ -22,6 +24,7 @@ const (
 	httpWriteTO = "HTTP_WRITE_TO"
 )
 
+// Load will read the environmental variables with defaults
 func Load() *Config {
 	return &Config{
 		HTTP: &HTTP{
