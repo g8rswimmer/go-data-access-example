@@ -12,6 +12,7 @@ import (
 	"github.com/g8rswimmer/go-data-access-example/cmd/user-server/internal/httpx"
 	"github.com/g8rswimmer/go-data-access-example/pkg/api/user"
 	"github.com/g8rswimmer/go-data-access-example/pkg/dal"
+	"github.com/google/uuid"
 )
 
 var info = httpx.Info{
@@ -33,6 +34,9 @@ func main() {
 	u := &user.Handler{
 		UserDAO: &dal.User{
 			DB: db,
+			GenerateUUID: func() string {
+				return uuid.New().String()
+			},
 		},
 	}
 

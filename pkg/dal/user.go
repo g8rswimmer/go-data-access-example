@@ -9,15 +9,17 @@ import (
 
 	"github.com/g8rswimmer/go-data-access-example/pkg/errorx"
 	"github.com/g8rswimmer/go-data-access-example/pkg/model"
-	"github.com/google/uuid"
 )
 
 const uuidLength = 36
 
+// User handles all of the database actions
 type User struct {
-	DB *sql.DB
+	DB           *sql.DB
+	GenerateUUID GenerateUUID
 }
 
+// Create will insert a user into the database
 func (u *User) Create(ctx context.Context, user *model.User) (*model.UserEntity, error) {
 	if user == nil {
 		return nil, errors.New("user can not be nil")
@@ -27,7 +29,7 @@ func (u *User) Create(ctx context.Context, user *model.User) (*model.UserEntity,
 
 	e := &model.UserEntity{
 		Entity: model.Entity{
-			ID:        uuid.New().String(),
+			ID:        u.GenerateUUID(),
 			CreatedAt: now,
 			UpdatedAt: now,
 		},
@@ -44,6 +46,7 @@ func (u *User) Create(ctx context.Context, user *model.User) (*model.UserEntity,
 	return e, nil
 }
 
+// FetchByID returns an entity by the id
 func (u *User) FetchByID(ctx context.Context, id string) (*model.UserEntity, error) {
 	if len(id) != uuidLength {
 		return nil, fmt.Errorf("user fetch by id length %d", len(id))
@@ -67,6 +70,7 @@ func (u *User) FetchByID(ctx context.Context, id string) (*model.UserEntity, err
 
 }
 
+// FetchAll returns all entities
 func (u *User) FetchAll(ctx context.Context) ([]*model.UserEntity, error) {
 
 	const stmt = `SELECT id, first_name, last_name, created_at, updated_at, deleted_at FROM user`
@@ -95,6 +99,7 @@ func (u *User) FetchAll(ctx context.Context) ([]*model.UserEntity, error) {
 	return entities, nil
 }
 
+// Update will update an entity with new information
 func (u *User) Update(ctx context.Context, id string, user *model.User) (*model.UserEntity, error) {
 	switch {
 	case len(id) != uuidLength:
@@ -124,6 +129,7 @@ func (u *User) Update(ctx context.Context, id string, user *model.User) (*model.
 	return e, nil
 }
 
+// Delete will soft delete an entity
 func (u *User) Delete(ctx context.Context, id string) error {
 	if len(id) != uuidLength {
 		return fmt.Errorf("user fetch by id length %d", len(id))
