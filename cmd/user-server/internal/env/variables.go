@@ -52,7 +52,7 @@ func readTO() time.Duration {
 }
 
 func writeTO() time.Duration {
-	wto := os.Getenv(httpReadTO)
+	wto := os.Getenv(httpWriteTO)
 	if len(wto) == 0 {
 		wto = "10"
 	}
